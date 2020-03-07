@@ -5,7 +5,7 @@ from nim import Nim
 print("Hello in Nim")
 piles, objects = input("Set game settings (`number of piles` `number of objects`): ").split()
 
-game = Nim(piles, objects)
+game = Nim(int(piles), int(objects))
 tree = Mcts(game)
 tree.run(1)
 
