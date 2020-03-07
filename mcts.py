@@ -23,7 +23,7 @@ class MctsTree:
         for action in self.possible_actions:
             child_node = self.children[action]
             win_rate = child_node._wins / child_node._simulations
-            exploration = math.sqrt(
+            exploration = exploration_parameter * math.sqrt(
                 math.log(self._simulations) / child_node._simulations)
             exploration_values[child_node] = win_rate + exploration
 
