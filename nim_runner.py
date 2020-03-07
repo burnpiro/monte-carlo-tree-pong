@@ -1,7 +1,7 @@
 from mcts import Mcts
-from nim import nim
+from nim import Nim
 
-game = nim(3, 20)
+game = Nim(3, 20)
 tree = Mcts(game)
 tree.run(1)
 

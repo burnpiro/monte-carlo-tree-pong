@@ -1,43 +1,46 @@
+from __future__ import annotations
 import math
 import random
+from typing import List, Set, Dict, Tuple
+from nim import Action, Nim
 
 
 class MctsTree:
-    def __init__(self, possible_actions, game_state):
+    def __init__(self, possible_actions: List[Action], game_state: Nim) -> None:
         self.children = {}
-        self.possible_actions = set(possible_actions)
-        self._is_leaf = True
-        self._simulations = 0
-        self._wins = 0
-        self._state = game_state.copy()
+        self.possible_actions: Set[Action] = set(possible_actions)
+        self._is_leaf: bool = True
+        self._simulations: int = 0
+        self._wins: int = 0
+        self._state: Nim = game_state.copy()
 
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return self._state.done or bool(self.possible_actions - self.children.keys())
 
-    def choose_child_node(self, exploration_parameter):
-        exploration_values = {}
+    def choose_child_node(self, exploration_parameter: int):
+        exploration_values: Dict[int] = {}
 
         for action in self.possible_actions:
             child_node = self.children[action]
-            win_rate = child_node._wins/child_node._simulations
+            win_rate = child_node._wins / child_node._simulations
             exploration = math.sqrt(
-                math.log(self._simulations)/child_node._simulations)
+                math.log(self._simulations) / child_node._simulations)
             exploration_values[child_node] = win_rate + exploration
 
         return max(exploration_values, key=lambda x: exploration_values[x])
 
-    def expand(self):
+    def expand(self) -> MctsTree:
         if self._state.done:
             # dont expand terminating leaves
             return self
-        action = (self.possible_actions - self.children.keys()).pop()
-        new_state = self._state.copy()
+        action: Action = (self.possible_actions - self.children.keys()).pop()
+        new_state: Nim = self._state.copy()
         new_state.act(action)
-        new_node = MctsTree(new_state.possible_actions(), new_state)
+        new_node: MctsTree = MctsTree(new_state.possible_actions(), new_state)
         self.children[action] = new_node
         return new_node
 
-    def simulate(self):
+    def simulate(self) -> int:
         game = self._state.copy()
         done = game.done
         while not done:
@@ -48,12 +51,12 @@ class MctsTree:
 
 
 class Mcts:
-    def __init__(self, game):
-        self.game = game.copy()
-        self.root = MctsTree(game.possible_actions(), game)
-        self._exploration_parameter = 1.41
+    def __init__(self, game: Nim) -> None:
+        self.game: Nim = game.copy()
+        self.root: MctsTree = MctsTree(game.possible_actions(), game)
+        self._exploration_parameter: int = 1.41
 
-    def selection(self):
+    def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
         potential_leaf = self.root
         while not potential_leaf.is_leaf():
@@ -63,27 +66,27 @@ class Mcts:
 
         return path, potential_leaf
 
-    def backpropagation(self, path, winning_player):
+    def backpropagation(self, path: List[MctsTree], winning_player: int) -> None:
         for node in path:
             if node._state.current_player == winning_player:
                 node._wins += 1
             node._simulations += 1
 
-    def step(self):
+    def step(self) -> None:
         path, leaf = self.selection()
         new_node = leaf.expand()
         path.append(new_node)
         winning_player = new_node.simulate()
         self.backpropagation(path, winning_player)
 
-    def run(self, steps):
+    def run(self, steps: int) -> None:
         for _ in range(steps):
             self.step()
 
     def predict(self):
         return max(self.root.children, key=lambda x: self.root.children[x]._simulations)
 
-    def move_root(self, action):
+    def move_root(self, action) -> None:
         if action in self.root.children:
             self.root = self.root.children[action]
         else:
