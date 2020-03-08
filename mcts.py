@@ -2,7 +2,7 @@ from __future__ import annotations
 import math
 import random
 from typing import List, Set, Dict, Tuple
-from nim import Action, Nim
+from nim.nim import Action, Nim
 
 
 class MctsTree:

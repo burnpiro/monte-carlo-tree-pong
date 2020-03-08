@@ -4,7 +4,10 @@ Monte Carlo Tree Search for pong game
 ### Requirements
 ```bash
 python=>3.7
+gym==0.16.0
 ```
+
+## Nim Game
 
 ### Usage
 To start the game
@@ -21,3 +24,17 @@ Making a move (remove 2 objects from second pile):
 ```bash
 Your move: 1 2
 ```
+
+## Pong game
+
+Start random game
+```bash
+python run_gym_random.py
+```
+
+Start responsive game
+```bash
+python run_gym_keyboard.py
+```
+
+Read the instructions in the console.
