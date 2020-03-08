@@ -1,16 +1,18 @@
 from mcts import Mcts
-from nim import nim
+from nim import Nim
 
-game = nim(3, 20)
-tree = Mcts(game)
-tree.run(1)
 
 print("Hello in Nim")
+piles, objects = input("Set game settings (`number of piles` `number of objects`): ").split()
+
+game = Nim(int(piles), int(objects))
+tree = Mcts(game)
+tree.run(1)
 
 
 while not game.done:
     print(game.piles)
-    move = input("Your move: ").split()
+    move = input("Your move (`pile` `objects`): ").split()
     action = tuple(int(x) for x in move)
     game.act(action)
     tree.move_root(action)
