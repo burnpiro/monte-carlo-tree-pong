@@ -1,5 +1,5 @@
 from mcts import Mcts
-from nim import Nim
+from nim.nim import Nim
 
 
 print("Hello in Nim")
