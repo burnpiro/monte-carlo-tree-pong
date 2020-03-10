@@ -7,6 +7,17 @@ python=>3.7
 gym==0.16.0
 ```
 
+### Installation
+
+```bash
+pip install -r requirements.txt
+pip install 'gym[atari]'
+```
+
+### Potential problems
+- missing **ffmpeg**
+- missing **libav-tools** (Ubuntu)
+
 ## Nim Game
 
 ### Usage
