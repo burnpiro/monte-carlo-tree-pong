@@ -8,8 +8,6 @@ from gym.envs.atari.atari_env import AtariEnv
 class PongGame(AtariEnv):
     def __init__(self):
         super().__init__()
-        self._playerA_actions = [3, 4]
-        self._playerB_actions = [21, 22]
         self._action_set = self.ale.getMinimalActionSet()
         self._action_set2 = [x+18 for x in self._action_set]
 
