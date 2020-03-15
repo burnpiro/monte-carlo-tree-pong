@@ -1,3 +1,6 @@
-https://github.com/MarekPokropinski/atari-py/releases/download/0.3.0/atari_py-0.3.0-cp36-cp36m-win_amd64.whl ; sys_platform == "win32"
-git+https://github.com/MarekPokropinski/atari-py.git ; sys_platform == "linux"
+https://github.com/MarekPokropinski/atari-py/releases/download/0.3.0/atari_py-0.3.0-cp36-cp36m-win_amd64.whl ; sys_platform == "win32" and python_version == '3.6'
+https://github.com/MarekPokropinski/atari-py/releases/download/0.3.0/atari_py-0.3.0-cp37-cp37m-win_amd64.whl ; sys_platform == "win32" and python_version == '3.7'
+https://github.com/MarekPokropinski/atari-py/releases/download/0.3.0/atari_py-0.3.0-cp36-cp36m-linux_x86_64.whl ; sys_platform == "linux" and python_version == '3.6'
+https://github.com/MarekPokropinski/atari-py/releases/download/0.3.0/atari_py-0.3.0-cp37-cp37m-linux_x86_64.whl ; sys_platform == "linux" and python_version == '3.7'
+
 gym==0.16.0
