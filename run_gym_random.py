@@ -26,10 +26,9 @@ if __name__ == '__main__':
             action1 = agent1.act(ob, reward, done)
             action2 = agent2.act(ob, reward, done)
             ob, reward, done, _ = env.step(action1, a2=action2)
-            if done or reward:
+            if done:
                 break
             env.render()
-            
 
     # Close the env and write monitor result info to disk
     env.close()
