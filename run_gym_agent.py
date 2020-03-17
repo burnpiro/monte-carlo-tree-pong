@@ -2,8 +2,11 @@ import gym
 from gym import wrappers, logger
 
 from pong_game import PongGame
-from gym_agents import RandomAgent
+from gym_agents import *
 from time import sleep
+
+agent = GreedyAgent
+
 
 if __name__ == '__main__':
     # You can set the level to logger.DEBUG or logger.WARN if you
@@ -12,13 +15,12 @@ if __name__ == '__main__':
 
     env = PongGame()
     env.seed(0)
-    agent1 = RandomAgent(env.action_space)
-    agent2 = RandomAgent(env.action_space)
+    agent1 = agent(env.action_space, player=1)
+    agent2 = agent(env.action_space, player=2)
 
     episode_count = 1
     reward = 0
     done = False
-    print(env.action_space.n)
 
     for i in range(episode_count):
         ob = env.reset()
@@ -29,6 +31,7 @@ if __name__ == '__main__':
             if done:
                 break
             env.render()
+            sleep(0.03)
 
     # Close the env and write monitor result info to disk
     env.close()
