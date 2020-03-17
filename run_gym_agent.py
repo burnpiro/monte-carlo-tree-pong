@@ -5,8 +5,8 @@ from pong_game import PongGame
 from gym_agents import *
 from time import sleep
 
-agent = GreedyAgent
-
+agent_agr = AggressiveAgent
+agent_gre = GreedyAgent
 
 if __name__ == '__main__':
     # You can set the level to logger.DEBUG or logger.WARN if you
@@ -15,8 +15,8 @@ if __name__ == '__main__':
 
     env = PongGame()
     env.seed(0)
-    agent1 = agent(env.action_space, player=1)
-    agent2 = agent(env.action_space, player=2)
+    agent1 = agent_agr(env.action_space, player=1)
+    agent2 = agent_gre(env.action_space, player=2)
 
     episode_count = 1
     reward = 0
