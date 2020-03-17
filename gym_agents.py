@@ -1,3 +1,21 @@
+# Possible actions are:
+# 0: NOOP,
+# 1: FIRE,
+# 2: UP,
+# 3: RIGHT,
+# 4: LEFT, <- unused in pong
+# 5: DOWN, <- unused in pong
+
+NOOP = 0
+FIRE = 1
+UP = 2
+RIGHT = 3
+
+RAM_PLAYER_1_POS = 60
+RAM_PLAYER_2_POS = 59
+RAM_BALL_Y_POS = 54
+
+
 class RandomAgent():
     def __init__(self, action_space, **kwargs):
         self.action_space = action_space
@@ -8,20 +26,21 @@ class RandomAgent():
 
 class GreedyAgent():
     pallet_height = 5
+    center_of_pallet_size = 0.6
 
     def __init__(self, action_space, player=1, **kwargs):
         self.action_space = action_space
         self.player = player
 
     def act(self, observation, reward, done):
-        if observation is not None and observation[54] != 0:
-            pos = observation[60] if self.player == 1 else observation[59]
+        if observation is not None and observation[RAM_BALL_Y_POS] != 0:
+            pos = observation[RAM_PLAYER_1_POS] if self.player == 1 else observation[RAM_PLAYER_2_POS]
             pos += GreedyAgent.pallet_height
-            ball_pos = observation[54]
-            if pos-GreedyAgent.pallet_height*0.6 > ball_pos:
-                return 2
-            if pos+GreedyAgent.pallet_height*0.6 < ball_pos:
-                return 3
-            return 0
+            ball_pos = observation[RAM_BALL_Y_POS]
+            if pos-GreedyAgent.pallet_height*GreedyAgent.center_of_pallet_size > ball_pos:
+                return UP
+            if pos+GreedyAgent.pallet_height*GreedyAgent.center_of_pallet_size < ball_pos:
+                return RIGHT
+            return NOOP
         else:
-            return 0
+            return NOOP
