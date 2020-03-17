@@ -2,14 +2,14 @@
 # 0: NOOP,
 # 1: FIRE,
 # 2: UP,
-# 3: RIGHT,
-# 4: LEFT, <- unused in pong
-# 5: DOWN, <- unused in pong
+# 3: RIGHT, <- works as down in pong
+# 4: LEFT, <- works as up in pong
+# 5: DOWN,
 
 NOOP = 0
 FIRE = 1
 UP = 2
-RIGHT = 3
+DOWN = 5
 
 RAM_PLAYER_1_POS = 60
 RAM_PLAYER_2_POS = 59
@@ -40,7 +40,7 @@ class GreedyAgent():
             if pos-GreedyAgent.pallet_height*GreedyAgent.center_of_pallet_size > ball_pos:
                 return UP
             if pos+GreedyAgent.pallet_height*GreedyAgent.center_of_pallet_size < ball_pos:
-                return RIGHT
+                return DOWN
             return NOOP
         else:
             return NOOP
