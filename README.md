@@ -55,7 +55,7 @@ Read the instructions in the console.
 `gym.make` returns environment (`env`) which allows us to make steps by passing action as a parameter to `env.step(action)`.
 
 `env.step()` returns Tuple with 3 values:
-- **object** - memory dump 210 x 160 x 3 flatten to 10800
+- **object** - RAM dump 128 elements vector
 - **reward** - -1.0, 0, 1.0 (loss, neutral, win)
 - **done** - is game done
 
@@ -70,3 +70,20 @@ We can close and restore states by using one of those methods:
 ```python
 state = env.clone_state()
 ```
+
+## Atari RAM values positions for PONG
+
+After a long time searching through the RAM dumps we've manage to figure out where values are stored:
+
+- **RAM_PLAYER_1_POS = 60**
+- **RAM_PLAYER_2_POS = 59**
+- **RAM_BALL_Y_POS = 54**
+- **RAM_BALL_X_POS = 49**  # 128 is center, 68 is when hits left agent, 188 when right agent, 52 when outside left, 204 when outside right
+- **BOUNCE_COUNT = 17**
+- **BALL_IN_THE_WALL = 20**  # != 0 means it's in the wall
+- **P_RIGHT_SCORE = 14**
+- **P_LEFT_SCORE = 13**
+- **ROUND_NUM = 9**
+- **BALL_DIRECTION = 18**  # 1 means LEFT 0 means RIGHT (only applied when ball got hit before that 255 which is also LEFT)
+- **PREVIOUS_HIT_SOURCE = 12**  # 0 - no ball, 64 - nothing hit the ball yet (start of the game),
+ 128 - wall hit a ball, 192 - player hit a ball. Vales are weird because usually when hit it goes from 194 to 192 and from 71 to 64 (71, 70, 69, 68, 67, 66, 65, 54) so better check ranges but always starts above the value
