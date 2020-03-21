@@ -1,9 +1,7 @@
-import gym
-from gym import wrappers, logger
+from gym import logger
 
-from pong_game import PongGame
-from gym_agents import RandomAgent
-from time import sleep
+from pong.pong_game import PongGame
+from pong.gym_agents import RandomAgent
 
 if __name__ == '__main__':
     # You can set the level to logger.DEBUG or logger.WARN if you
