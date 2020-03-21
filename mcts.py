@@ -1,30 +1,38 @@
 from __future__ import annotations
+from typing import Union, Tuple, List
 import math
 import random
 from typing import List, Set, Dict, Tuple
-from nim.nim import Action, Nim
+from nim.nim import Nim, ACTION as NIM_ACTION
+from pong.pong_game import PongGame, ACTION as PONG_ACTION
+
+EXPLORATION_PARAMETER = 1.41
+
+AVAILABLE_ACTION = Union[NIM_ACTION, PONG_ACTION]
+GAME = Union[Nim, PongGame]
 
 
 class MctsTree:
-    def __init__(self, possible_actions: List[Action], game_state: Nim) -> None:
+    def __init__(self, possible_actions: List[AVAILABLE_ACTION],
+                 game_state: GAME) -> None:
         self.children = {}
-        self.possible_actions: Set[Action] = set(possible_actions)
+        self.possible_actions: Set[AVAILABLE_ACTION] = set(possible_actions)
         self._is_leaf: bool = True
-        self._simulations: int = 0
-        self._wins: int = 0
-        self._state: Nim = game_state.copy()
+        self.simulations: int = 0
+        self.wins: int = 0
+        self._state: GAME = game_state.copy()
 
     def is_leaf(self) -> bool:
         return self._state.done or bool(self.possible_actions - self.children.keys())
 
-    def choose_child_node(self, exploration_parameter: int):
+    def choose_child_node(self, exploration_parameter: float):
         exploration_values: Dict[int] = {}
 
         for action in self.possible_actions:
             child_node = self.children[action]
-            win_rate = child_node._wins / child_node._simulations
+            win_rate = child_node.wins / child_node.simulations
             exploration = exploration_parameter * math.sqrt(
-                math.log(self._simulations) / child_node._simulations)
+                math.log(self.simulations) / child_node.simulations)
             exploration_values[child_node] = win_rate + exploration
 
         return max(exploration_values, key=lambda x: exploration_values[x])
@@ -33,8 +41,8 @@ class MctsTree:
         if self._state.done:
             # dont expand terminating leaves
             return self
-        action: Action = (self.possible_actions - self.children.keys()).pop()
-        new_state: Nim = self._state.copy()
+        action = (self.possible_actions - self.children.keys()).pop()
+        new_state: GAME = self._state.copy()
         new_state.act(action)
         new_node: MctsTree = MctsTree(new_state.possible_actions(), new_state)
         self.children[action] = new_node
@@ -44,17 +52,15 @@ class MctsTree:
         game = self._state.copy()
         done = game.done
         while not done:
-            actions = game.possible_actions()
-            action = random.choice(actions)
-            done = game.act(action)
-        return game.current_player
+            done = game.act_random()
+        return game.winning_player
 
 
 class Mcts:
-    def __init__(self, game: Nim) -> None:
-        self.game: Nim = game.copy()
+    def __init__(self, game: GAME) -> None:
+        self.game: GAME = game.copy()
         self.root: MctsTree = MctsTree(game.possible_actions(), game)
-        self._exploration_parameter: int = 1.41
+        self._exploration_parameter: float = EXPLORATION_PARAMETER
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
@@ -69,8 +75,8 @@ class Mcts:
     def backpropagation(self, path: List[MctsTree], winning_player: int) -> None:
         for node in path:
             if node._state.current_player == winning_player:
-                node._wins += 1
-            node._simulations += 1
+                node.wins += 1
+            node.simulations += 1
 
     def step(self) -> None:
         path, leaf = self.selection()
@@ -84,7 +90,7 @@ class Mcts:
             self.step()
 
     def predict(self):
-        return max(self.root.children, key=lambda x: self.root.children[x]._simulations)
+        return max(self.root.children, key=lambda x: self.root.children[x].simulations)
 
     def move_root(self, action) -> None:
         if action in self.root.children:

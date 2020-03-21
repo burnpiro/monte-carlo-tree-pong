@@ -1,12 +1,11 @@
-import gym
-from gym import wrappers, logger
+from gym import logger
 
-from pong_game import PongGame
-from gym_agents import *
+from pong.pong_game import PongGame
+from pong.gym_agents import *
 from time import sleep
 
-agent_agr = AggressiveAgent
-agent_gre = GreedyAgent
+agent_agr = GreedyAgent
+agent_gre = RandomAgent
 
 if __name__ == '__main__':
     # You can set the level to logger.DEBUG or logger.WARN if you
@@ -27,9 +26,9 @@ if __name__ == '__main__':
         while True:
             action1 = agent1.act(ob, reward, done)
             action2 = agent2.act(ob, reward, done)
-            ob, reward, done, _ = env.step(action1, a2=action2)
-            if done:
-                break
+            ob, reward = env.step(action1, a2=action2)
+            if reward != 0:
+                print(reward)
             env.render()
             sleep(0.03)
 

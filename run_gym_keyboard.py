@@ -1,9 +1,5 @@
-import gym
 from gym import wrappers, logger
-import sys
-import gym
-import time
-from pong_game import PongGame
+from pong.pong_game import PongGame
 
 human_agent_action = 0
 human_wants_restart = False

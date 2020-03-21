@@ -107,3 +107,4 @@ class LazyAgent:
             return FIRE
         else:
             return FIRE
+
