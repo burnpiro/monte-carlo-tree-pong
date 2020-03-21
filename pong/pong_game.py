@@ -12,8 +12,10 @@ from gym.envs.atari.atari_env import AtariEnv
 ACTION = int
 POSSIBLE_PLAYERS = Type[Union[GreedyAgent, AggressiveAgent, RandomAgent, None]]
 
+
 class PongGame(AtariEnv):
     _game_count = count(0)
+
     def __init__(self, second_player: POSSIBLE_PLAYERS = None):
         super().__init__()
         self._game_id = next(self._game_count)
@@ -73,3 +75,11 @@ class PongGame(AtariEnv):
         _new_game.restore_full_state(self.clone_full_state())
 
         return _new_game
+
+    def get_state(self):
+        return self.clone_full_state()
+
+    def set_state(self, state, done, current_player):
+        self.done = done
+        self.current_player = current_player
+        self.restore_full_state(state)

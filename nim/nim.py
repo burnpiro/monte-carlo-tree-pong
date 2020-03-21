@@ -13,7 +13,8 @@ class Nim:
         random.seed(seed)
         assert objects >= piles * MINIMUM_INITIAL_PILE_SIZE
         objects -= piles * MINIMUM_INITIAL_PILE_SIZE
-        self.piles: List[int] = [MINIMUM_INITIAL_PILE_SIZE for _ in range(piles)]
+        self.piles: List[int] = [
+            MINIMUM_INITIAL_PILE_SIZE for _ in range(piles)]
         self.current_player: int = 0
         self.winning_player: int = 0
         self.done: bool = False
@@ -37,7 +38,8 @@ class Nim:
         self.winning_player = self.current_player
 
         # Count number of objects left and check if game is done
-        self.done = reduce(lambda acc, pile_size: acc + pile_size, self.piles) == 0
+        self.done = reduce(lambda acc, pile_size: acc +
+                           pile_size, self.piles) == 0
         return self.done
 
     def act_random(self) -> bool:
@@ -53,6 +55,10 @@ class Nim:
         _copy.done = self.done
         return _copy
 
-# game = Nim(3, 24, 0)
-# print(game.piles)
-# print(game.possible_actions())
+    def get_state(self):
+        return self.piles.copy()
+
+    def set_state(self, state, done, current_player):
+        self.done = done
+        self.current_player = current_player
+        self.piles = state.copy()
