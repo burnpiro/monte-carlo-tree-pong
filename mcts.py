@@ -13,17 +13,19 @@ GAME = Union[Nim, PongGame]
 
 
 class MctsTree:
-    def __init__(self, possible_actions: List[AVAILABLE_ACTION],
-                 game_state: GAME) -> None:
+    def __init__(self, possible_actions: List[AVAILABLE_ACTION], game: Game) -> None:
         self.children = {}
         self.possible_actions: Set[AVAILABLE_ACTION] = set(possible_actions)
         self._is_leaf: bool = True
         self.simulations: int = 0
         self.wins: int = 0
-        self._state: GAME = game_state.copy()
+        self._state = game.get_state()
+        self._terminating = game.done
+        self.current_player = game.current_player
+        self.game = game
 
     def is_leaf(self) -> bool:
-        return self._state.done or bool(self.possible_actions - self.children.keys())
+        return self._terminating or bool(self.possible_actions - self.children.keys())
 
     def choose_child_node(self, exploration_parameter: float):
         exploration_values: Dict[int] = {}
@@ -38,28 +40,30 @@ class MctsTree:
         return max(exploration_values, key=lambda x: exploration_values[x])
 
     def expand(self) -> MctsTree:
-        if self._state.done:
+        if self._terminating:
             # dont expand terminating leaves
             return self
         action = (self.possible_actions - self.children.keys()).pop()
-        new_state: GAME = self._state.copy()
-        new_state.act(action)
-        new_node: MctsTree = MctsTree(new_state.possible_actions(), new_state)
+        self.game.set_state(self._state, self._terminating,
+                            self.current_player)
+        self.game.act(action)
+        new_node: MctsTree = MctsTree(self.game.possible_actions(), self.game)
         self.children[action] = new_node
         return new_node
 
     def simulate(self) -> int:
-        game = self._state.copy()
-        done = game.done
+        self.game.set_state(self._state, self._terminating,
+                            self.current_player)
+        done = self._terminating
         while not done:
-            done = game.act_random()
-        return game.winning_player
+            done = self.game.act_random()
+        return self.game.winning_player
 
 
 class Mcts:
     def __init__(self, game: GAME) -> None:
         self.game: GAME = game.copy()
-        self.root: MctsTree = MctsTree(game.possible_actions(), game)
+        self.root: MctsTree = MctsTree(game.possible_actions(), self.game)
         self._exploration_parameter: float = EXPLORATION_PARAMETER
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
@@ -74,7 +78,7 @@ class Mcts:
 
     def backpropagation(self, path: List[MctsTree], winning_player: int) -> None:
         for node in path:
-            if node._state.current_player == winning_player:
+            if node.current_player == winning_player:
                 node.wins += 1
             node.simulations += 1
 
@@ -96,6 +100,7 @@ class Mcts:
         if action in self.root.children:
             self.root = self.root.children[action]
         else:
-            new_state = self.root._state.copy()
-            new_state.act(action)
-            self.root = MctsTree(new_state.possible_actions(), new_state)
+            self.game.set_state(
+                self.root._state, self.root._terminating, self.root.current_player)
+            self.game.act(action)
+            self.root = MctsTree(self.game.possible_actions(), self.game)
