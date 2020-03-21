@@ -1,7 +1,7 @@
 from mcts import Mcts
 from pong.pong_game import PongGame
 from pong.gym_agents import RandomAgent, AggressiveAgent, GreedyAgent
-from time import sleep
+from time import sleep, time
 
 possible_opponents = {
     1: RandomAgent,
@@ -17,13 +17,25 @@ game = PongGame(opponent)
 tree = Mcts(game)
 tree.run(1)
 
+count = 0
 game.reset()
 while not game.done:
     if game.done:
         print("You won!")
         exit()
 
-    tree.run(10)
+    count = count + 1
+    start = time()
+    tree.run(60)
+    stop = time()
+    ob = game._get_obs()
+    if ob is not None:
+        game.ale.saveScreenPNG('images/' + str(count) + '-state.png')
+        print(count, end=" ")
+        for i, val in enumerate(ob):
+            print(val, end=" ")
+        print("")
+    print("total time: {}", stop - start)
     action = tree.predict()
     game.act(action)
     tree.move_root(action)

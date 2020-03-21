@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union, Tuple, List, Type
 import random
+from itertools import count
 import gym
 from gym.spaces import Discrete, Box
 import numpy as np
@@ -11,10 +12,11 @@ from gym.envs.atari.atari_env import AtariEnv
 ACTION = int
 POSSIBLE_PLAYERS = Type[Union[GreedyAgent, AggressiveAgent, RandomAgent, None]]
 
-
 class PongGame(AtariEnv):
+    _game_count = count(0)
     def __init__(self, second_player: POSSIBLE_PLAYERS = None):
         super().__init__()
+        self._game_id = next(self._game_count)
         self._seconf_player_class: POSSIBLE_PLAYERS = second_player
         self._is_multiplayer = second_player is not None
         self._action_set = self.ale.getMinimalActionSet()
@@ -23,7 +25,7 @@ class PongGame(AtariEnv):
         self.current_player = 1
         self.done = False
         self._player2_bot: POSSIBLE_PLAYERS = second_player(self.action_space,
-                                                            player=2) if not self._is_multiplayer else None
+                                                            player=2) if self._is_multiplayer is True else None
 
     def step(self, a1: ACTION, a2: Union[ACTION, None] = None):
         action1 = self._action_set[a1]
@@ -39,7 +41,7 @@ class PongGame(AtariEnv):
 
     def act(self, action1: ACTION, action2: Union[ACTION, None] = None) -> bool:
         if action2 is None and self._player2_bot is not None:
-            action2 = self._player2_bot.act(self._get_obs())
+            action2 = self._player2_bot.act(self._get_obs(), 1, False)
 
         ob, reward = self.step(action1, action2)
 
@@ -54,7 +56,7 @@ class PongGame(AtariEnv):
         action1 = random.choice(self.possible_actions())
         action2 = None
         if self._player2_bot is not None:
-            action2 = self._player2_bot.act(self._get_obs())
+            action2 = self._player2_bot.act(self._get_obs(), 1, False)
 
         self.done = self.act(action1, action2)
         return self.done
