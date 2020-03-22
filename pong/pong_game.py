@@ -49,7 +49,7 @@ class PongGame(AtariEnv):
             return [FIRE]
         return [FIRE, DOWN, UP]
 
-    def act(self, action: ACTION) -> bool:
+    def act(self, action: ACTION) -> int:
         if self.current_player == 0:
             self.player_1_action = action
             self.current_player = 1
