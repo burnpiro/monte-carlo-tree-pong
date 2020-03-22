@@ -2,7 +2,7 @@ from mcts import Mcts
 from pong.pong_game import PongGame
 from pong.gym_agents import RandomAgent, AggressiveAgent, GreedyAgent
 from time import sleep, time
-
+from pong.gym_agents import *
 possible_opponents = {
     1: RandomAgent,
     2: GreedyAgent,
@@ -10,15 +10,19 @@ possible_opponents = {
 }
 
 print("Welcome in Pong")
-selected_opponent,  = input("Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive): ").split()
+selected_opponent,  = input(
+    "Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive): ").split()
+
+game = PongGame()
+game.reset()
 
 opponent = possible_opponents[int(selected_opponent)]
-game = PongGame(opponent)
+opponent = opponent(game.action_space, player=2)
+
 tree = Mcts(game)
-tree.run(1)
 
 count = 0
-game.reset()
+
 while not game.done:
     if game.done:
         print("You won!")
@@ -36,12 +40,17 @@ while not game.done:
             print(val, end=" ")
         print("")
     print("total time: {}", stop - start)
-    action = tree.predict()
-    game.act(action)
-    tree.move_root(action)
+    action1 = tree.predict()
+    action2 = opponent.act(ob, 0, 0)
+
+    game.act(action1)
+    tree.move_root(action1)
+    game.act(action2)
+    tree.move_root(action2)
+
     game.render()
     sleep(0.03)
 
-    print("Enemy move: "+str(action))
+    print("Enemy move: "+str(action1))
 
 print("You lost!")

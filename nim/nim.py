@@ -16,7 +16,6 @@ class Nim:
         self.piles: List[int] = [
             MINIMUM_INITIAL_PILE_SIZE for _ in range(piles)]
         self.current_player: int = 0
-        self.winning_player: int = 0
         self.done: bool = False
 
         # distribute objects randomly into piles
@@ -34,19 +33,20 @@ class Nim:
         # Make sure that pile size has enough objects to take from
         assert self.piles[pile] >= objects_taken
         self.piles[pile] -= objects_taken
-        self.current_player = 1 - self.current_player
-        self.winning_player = self.current_player
 
         # Count number of objects left and check if game is done
         self.done = reduce(lambda acc, pile_size: acc +
                            pile_size, self.piles) == 0
+        if not self.done:
+            self.current_player = 1 - self.current_player
+            return 0
+        self.done = 1 if self.current_player == 0 else -1
         return self.done
 
     def act_random(self) -> bool:
         actions = self.possible_actions()
         action = random.choice(actions)
-        self.done = self.act(action)
-        return self.done
+        return self.act(action)
 
     def copy(self) -> Nim:
         _copy = Nim(0, 0, 0)
