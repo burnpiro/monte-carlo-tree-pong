@@ -1,3 +1,5 @@
+from typing import List
+
 # Possible actions are:
 # 0: NOOP,
 # 1: FIRE,
@@ -27,6 +29,20 @@ PREVIOUS_HIT_SOURCE = 12  # 0 - no ball, 64 - nothing hit the ball yet (start of
 # 128 - wall hit a ball, 192 - player hit a ball. Vales are weird because usually when hit
 # it goes from 194 to 192 and from 71 to 64 (71, 70, 69, 68, 67, 66, 65, 54) so better check ranges
 # but always starts above the value
+
+
+def check_if_should_take_action(ob: List[int], player: int = 0):
+    """Decides if player should take an action
+
+    Keyword arguments:
+    ob -- RAM dump
+    player -- 0 (P1 - right) or 1 (P2 - left)
+    """
+    if player == 0 and ob[RAM_BALL_X_POS] < 128:
+        return False
+    if player == 1 and ob[RAM_BALL_X_POS] > 128:
+        return False
+    return True
 
 
 class RandomAgent:
@@ -93,9 +109,7 @@ class LazyAgent:
 
     def act(self, observation, reward, done):
         if observation is not None and observation[RAM_BALL_Y_POS] != 0:
-            if self.player == 1 and observation[RAM_BALL_X_POS] < 128:
-                return FIRE
-            if self.player != 1 and observation[RAM_BALL_X_POS] > 128:
+            if not check_if_should_take_action(observation, player=0 if self.player == 1 else 1):
                 return FIRE
             pos = observation[RAM_PLAYER_1_POS] if self.player == 1 else observation[RAM_PLAYER_2_POS]
             pos += AggressiveAgent.pallet_height
