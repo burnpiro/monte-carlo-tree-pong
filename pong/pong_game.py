@@ -16,7 +16,11 @@ class PongGame(AtariEnv):
     _game_count = count(0)
 
     def __init__(self, second_player: POSSIBLE_PLAYERS = None):
-        super().__init__()
+
+        super().__init__(frameskip=1)
+        # self.ale.setInt('frame_skip', 2)
+        # self.ale.setFloat('repeat_action_probability', 0.5)
+        self.seed()
         self._game_id = next(self._game_count)
         self._seconf_player_class: POSSIBLE_PLAYERS = second_player
         self._is_multiplayer = second_player is not None
@@ -52,14 +56,11 @@ class PongGame(AtariEnv):
         if reward != 0:
             self.current_player = 0 if reward == 1 else 1
             self.done = True
-
-        if not self.done:
-            self.current_player = 0
-
-        if self.done:
             return reward
 
-        return 0
+        else:
+            self.current_player = 0
+            return 0
 
     def act_random(self) -> bool:
         return self.act(random.choice(self.possible_actions()))
