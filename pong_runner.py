@@ -3,6 +3,8 @@ from pong.pong_game import PongGame
 from pong.gym_agents import RandomAgent, AggressiveAgent, GreedyAgent
 from time import sleep, time
 from pong.gym_agents import *
+from pong.monitor import PongMonitor
+
 possible_opponents = {
     1: RandomAgent,
     2: GreedyAgent,
@@ -15,6 +17,7 @@ selected_opponent,  = input(
     "Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive, 4 - Lazy): ").split()
 
 game = PongGame()
+game = PongMonitor(game, ".", force=True)
 game.reset()
 
 opponent = possible_opponents[int(selected_opponent)]
@@ -34,12 +37,12 @@ while not game.done:
     tree.run(60)
     stop = time()
     ob = game._get_obs()
-    if ob is not None:
-        game.ale.saveScreenPNG('images/' + str(count) + '-state.png')
-        print(count, end=" ")
-        for i, val in enumerate(ob):
-            print(val, end=" ")
-        print("")
+    # if ob is not None:
+    #     game.ale.saveScreenPNG('images/' + str(count) + '-state.png')
+    #     print(count, end=" ")
+    #     for i, val in enumerate(ob):
+    #         print(val, end=" ")
+    #     print("")
     print("total time: {}", stop - start)
     action1 = tree.predict()
     action2 = opponent.act(ob, 0, 0)
