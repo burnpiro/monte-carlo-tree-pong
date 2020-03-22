@@ -6,12 +6,13 @@ from pong.gym_agents import *
 possible_opponents = {
     1: RandomAgent,
     2: GreedyAgent,
-    3: AggressiveAgent
+    3: AggressiveAgent,
+    4: LazyAgent
 }
 
 print("Welcome in Pong")
 selected_opponent,  = input(
-    "Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive): ").split()
+    "Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive, 4 - Lazy): ").split()
 
 game = PongGame()
 game.reset()
