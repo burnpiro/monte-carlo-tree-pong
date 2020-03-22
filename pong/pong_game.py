@@ -26,7 +26,7 @@ class PongGame(AtariEnv):
         self._is_multiplayer = second_player is not None
         self._action_set = self.ale.getMinimalActionSet()
         self._action_set2 = [x + 18 for x in self._action_set]
-        self.current_player = 0
+        self.current_player = 0  # 0 (P1) or 1 (P2)
         self.done = False
         self.player_1_action = None
         self._player2_bot: POSSIBLE_PLAYERS = second_player(self.action_space,
@@ -41,7 +41,12 @@ class PongGame(AtariEnv):
         return ob, reward
 
     # Do not make this static because MCTS requires it
-    def possible_actions(self) -> List[ACTION]:
+    def possible_actions(self, player=None) -> List[ACTION]:
+        if player is not None:
+            ob = self._get_obs()
+            if check_if_should_take_action(ob, player=player):
+                return [DOWN, UP]
+            return [FIRE]
         return [FIRE, DOWN, UP]
 
     def act(self, action: ACTION) -> bool:
@@ -63,7 +68,7 @@ class PongGame(AtariEnv):
             return 0
 
     def act_random(self) -> bool:
-        return self.act(random.choice(self.possible_actions()))
+        return self.act(random.choice(self.possible_actions(player=self.current_player)))
 
     def reset(self):
         super().reset()

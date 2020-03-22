@@ -13,7 +13,7 @@ GAME = Union[Nim, PongGame]
 
 
 class MctsTree:
-    def __init__(self, possible_actions: List[AVAILABLE_ACTION], game: Game, prev_player: int = None) -> None:
+    def __init__(self, possible_actions: List[AVAILABLE_ACTION], game: GAME, prev_player: int = None) -> None:
         self.children = {}
         self.possible_actions: Set[AVAILABLE_ACTION] = set(possible_actions)
         self._is_leaf: bool = True
