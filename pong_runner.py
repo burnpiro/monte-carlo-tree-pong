@@ -23,7 +23,7 @@ game.reset()
 opponent = possible_opponents[int(selected_opponent)]
 opponent = opponent(game.action_space, player=2)
 
-tree = Mcts(game)
+tree = Mcts(game, thread_count=1)
 
 count = 0
 
@@ -53,7 +53,6 @@ while not game.done:
     tree.move_root(action2)
 
     game.render()
-    sleep(0.03)
 
     print("Enemy move: "+str(action1))
 

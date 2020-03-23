@@ -7,7 +7,7 @@ piles, objects = input(
     "Set game settings (`number of piles` `number of objects`): ").split()
 
 game = Nim(int(piles), int(objects))
-tree = Mcts(game)
+tree = Mcts(game, thread_count=8)
 tree.run(1)
 
 
