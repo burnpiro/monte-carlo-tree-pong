@@ -1,5 +1,5 @@
 from typing import List
-
+import random
 # Possible actions are:
 # 0: NOOP,
 # 1: FIRE,
@@ -25,7 +25,8 @@ P_LEFT_SCORE = 13
 ROUND_NUM = 9
 BALL_DIRECTION = 18  # 1 means LEFT 0 means RIGHT
 # (only applied when ball got hit before that 255 which is also LEFT)
-PREVIOUS_HIT_SOURCE = 12  # 0 - no ball, 64 - nothing hit the ball yet (start of the game),
+# 0 - no ball, 64 - nothing hit the ball yet (start of the game),
+PREVIOUS_HIT_SOURCE = 12
 # 128 - wall hit a ball, 192 - player hit a ball. Vales are weird because usually when hit
 # it goes from 194 to 192 and from 71 to 64 (71, 70, 69, 68, 67, 66, 65, 54) so better check ranges
 # but always starts above the value
@@ -46,33 +47,25 @@ def check_if_should_take_action(ob: List[int], player: int = 0):
 
 
 class RandomAgent:
-    def __init__(self, action_space, **kwargs):
-        self.action_space = action_space
-
-    def act(self, observation, reward, done):
-        return self.action_space.sample()
+    def act(self, observation, **kwargs):
+        return random.choice([FIRE, DOWN, UP])
 
 
 class GreedyAgent:
     pallet_height = 5
     center_of_pallet_size = 0.6
 
-    def __init__(self, action_space, player=1, **kwargs):
-        self.action_space = action_space
-        self.player = player
-
-    def act(self, observation, reward, done):
+    def act(self, observation, player):
         if observation is not None and observation[RAM_BALL_Y_POS] != 0:
-            pos = observation[RAM_PLAYER_1_POS] if self.player == 1 else observation[RAM_PLAYER_2_POS]
+            pos = observation[RAM_PLAYER_1_POS] if player == 0 else observation[RAM_PLAYER_2_POS]
             pos += GreedyAgent.pallet_height
             ball_pos = observation[RAM_BALL_Y_POS]
             if pos - GreedyAgent.pallet_height * GreedyAgent.center_of_pallet_size > ball_pos:
                 return UP
             if pos + GreedyAgent.pallet_height * GreedyAgent.center_of_pallet_size < ball_pos:
                 return DOWN
-            return NOOP
-        else:
-            return FIRE
+
+        return FIRE
 
 
 class AggressiveAgent:
@@ -80,22 +73,17 @@ class AggressiveAgent:
     center_of_pallet_size = 0.1
     epsilon = 5  # margin when agent is safe to press FIRE (on edge)
 
-    def __init__(self, action_space, player=1, **kwargs):
-        self.action_space = action_space
-        self.player = player
-
-    def act(self, observation, reward, done):
+    def act(self, observation, player=0):
         if observation is not None and observation[RAM_BALL_Y_POS] != 0:
-            pos = observation[RAM_PLAYER_1_POS] if self.player == 1 else observation[RAM_PLAYER_2_POS]
+            pos = observation[RAM_PLAYER_1_POS] if player == 0 else observation[RAM_PLAYER_2_POS]
             pos += AggressiveAgent.pallet_height
             ball_pos = observation[RAM_BALL_Y_POS]
             if pos - AggressiveAgent.pallet_height * AggressiveAgent.center_of_pallet_size > ball_pos + AggressiveAgent.epsilon:
                 return UP
             if pos + AggressiveAgent.pallet_height * AggressiveAgent.center_of_pallet_size < ball_pos - AggressiveAgent.epsilon:
                 return DOWN
-            return FIRE
-        else:
-            return FIRE
+
+        return FIRE
 
 
 class LazyAgent:
@@ -103,15 +91,11 @@ class LazyAgent:
     center_of_pallet_size = 0.1
     epsilon = 5  # margin when agent is safe to press FIRE (on edge)
 
-    def __init__(self, action_space, player=1, **kwargs):
-        self.action_space = action_space
-        self.player = player
-
-    def act(self, observation, reward, done):
+    def act(self, observation, player=0):
         if observation is not None and observation[RAM_BALL_Y_POS] != 0:
-            if not check_if_should_take_action(observation, player=0 if self.player == 1 else 1):
+            if not check_if_should_take_action(observation, player):
                 return FIRE
-            pos = observation[RAM_PLAYER_1_POS] if self.player == 1 else observation[RAM_PLAYER_2_POS]
+            pos = observation[RAM_PLAYER_1_POS] if player == 0 else observation[RAM_PLAYER_2_POS]
             pos += AggressiveAgent.pallet_height
             ball_pos = observation[RAM_BALL_Y_POS]
             if pos - AggressiveAgent.pallet_height * AggressiveAgent.center_of_pallet_size > ball_pos + AggressiveAgent.epsilon:
@@ -121,4 +105,3 @@ class LazyAgent:
             return FIRE
         else:
             return FIRE
-

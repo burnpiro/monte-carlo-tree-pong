@@ -4,8 +4,8 @@ from pong.pong_game import PongGame
 from pong.gym_agents import *
 from time import sleep
 
-agent_agr = GreedyAgent
-agent_gre = RandomAgent
+agent_agr = AggressiveAgent
+agent_gre = GreedyAgent
 
 if __name__ == '__main__':
     # You can set the level to logger.DEBUG or logger.WARN if you
@@ -14,8 +14,8 @@ if __name__ == '__main__':
 
     env = PongGame()
     env.seed(0)
-    agent1 = agent_agr(env.action_space, player=1)
-    agent2 = agent_gre(env.action_space, player=2)
+    agent1 = agent_agr()
+    agent2 = agent_gre()
 
     episode_count = 1
     reward = 0
@@ -24,8 +24,8 @@ if __name__ == '__main__':
     for i in range(episode_count):
         ob = env.reset()
         while True:
-            action1 = agent1.act(ob, reward, done)
-            action2 = agent2.act(ob, reward, done)
+            action1 = agent1.act(ob, player=0)
+            action2 = agent2.act(ob, player=1)
             ob, reward = env.step(action1, a2=action2)
             if reward != 0:
                 print(reward)

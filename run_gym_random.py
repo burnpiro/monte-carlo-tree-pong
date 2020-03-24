@@ -10,8 +10,8 @@ if __name__ == '__main__':
 
     env = PongGame()
     env.seed(0)
-    agent1 = RandomAgent(env.action_space)
-    agent2 = RandomAgent(env.action_space)
+    agent1 = RandomAgent()
+    agent2 = RandomAgent()
 
     episode_count = 1
     reward = 0
@@ -21,9 +21,9 @@ if __name__ == '__main__':
     for i in range(episode_count):
         ob = env.reset()
         while True:
-            action1 = agent1.act(ob, reward, done)
-            action2 = agent2.act(ob, reward, done)
-            ob, reward, done, _ = env.step(action1, a2=action2)
+            action1 = agent1.act(ob, player=0)
+            action2 = agent2.act(ob, player=1)
+            ob, reward = env.step(action1, a2=action2)
             if done:
                 break
             env.render()

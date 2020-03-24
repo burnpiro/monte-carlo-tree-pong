@@ -64,11 +64,18 @@ class MctsTree:
         self.children[action] = new_node
         return new_node
 
-    def simulate(self, game) -> int:
+    def simulate(self, game, simulation_agent=None, max_simulation_steps=300) -> int:
         self.restore_game_state(game)
         score = self._terminating
-        while not score:
-            score = game.act_random()
+        step = 0
+        while not score and step < max_simulation_steps:
+            if simulation_agent:
+                action = simulation_agent.act(
+                    game._get_obs(), player=game.current_player)
+                score = game.act(action)
+            else:
+                score = game.act_random()
+            step += 1
         return score
 
     def restore_game_state(self, game):
@@ -80,13 +87,15 @@ class MctsTree:
 
 
 class Mcts:
-    def __init__(self, game: GAME, thread_count: int = 1) -> None:
+    def __init__(self, game: GAME, thread_count: int = 1, simulation_agent=None, max_simulation_steps=300) -> None:
         self.games: List[GAME] = [game.copy() for _ in range(thread_count)]
         self.thread_count = thread_count
         self.root: MctsTree = MctsTree(
             game.possible_actions(), game)
         self._exploration_parameter: float = EXPLORATION_PARAMETER
         self.thread_pool = ThreadPool(thread_count)
+        self.simulation_agent = simulation_agent
+        self.max_simulation_steps = max_simulation_steps
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
@@ -128,6 +137,8 @@ class Mcts:
             for node in path:
                 if (node.prev_player == 0 and score == 1) or (node.prev_player == 1 and score == -1):
                     node.wins += 1
+                elif score == 0:
+                    node.wins += 0.5  # przy remisie dodajemy 1/2 dla obu stron
                 node.simulations += 1
 
     def step(self) -> None:
@@ -162,7 +173,7 @@ class Mcts:
         return new_paths
 
     def _run_simulation(self, node, game):
-        return node.simulate(game)
+        return node.simulate(game, self.simulation_agent, self.max_simulation_steps)
 
     def simulate(self, paths):
         results = [self.thread_pool.apply_async(
