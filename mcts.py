@@ -5,12 +5,12 @@ import random
 from typing import List, Set, Dict, Tuple
 from nim.nim import Nim, ACTION as NIM_ACTION
 from pong.pong_game import PongGame, ACTION as PONG_ACTION
-from multiprocessing.pool import ThreadPool
+from pong.monitor import PongMonitor
 
 EXPLORATION_PARAMETER = 1.41
 
 AVAILABLE_ACTION = Union[NIM_ACTION, PONG_ACTION]
-GAME = Union[Nim, PongGame]
+GAME = Union[Nim, PongGame, PongMonitor]
 
 
 class MctsTree:
@@ -24,150 +24,88 @@ class MctsTree:
         self._terminating = game.done
         self.current_player = game.current_player
         self.prev_player = prev_player
-        # self.game = game
+        self.game = game
 
     def is_leaf(self) -> bool:
-        return self._terminating or bool(len(self.possible_actions) - len(self.children.keys()))
+        return self._terminating or bool(self.possible_actions - self.children.keys())
 
-    def unvisited_children(self) -> int:
-        if self._terminating:
-            return 0
-        return len(self.possible_actions) - len(self.children.keys())
-
-    def choose_child_node(self, exploration_parameter: float, forbidden_nodes: set = None):
+    def choose_child_node(self, exploration_parameter: float):
         exploration_values: Dict[int] = {}
 
         for action in self.possible_actions:
             child_node = self.children[action]
-            if forbidden_nodes and child_node in forbidden_nodes:
-                continue
             win_rate = child_node.wins / child_node.simulations
             exploration = exploration_parameter * math.sqrt(
                 math.log(self.simulations) / child_node.simulations)
             exploration_values[child_node] = win_rate + exploration
 
-        if exploration_values:
-            return max(exploration_values, key=lambda x: exploration_values[x])
+        return max(exploration_values, key=lambda x: exploration_values[x])
 
-        return None
-
-    def expand(self, game) -> MctsTree:
+    def expand(self) -> MctsTree:
         if self._terminating:
             # dont expand terminating leaves
             return None
         action = (self.possible_actions - self.children.keys()).pop()
-        self.restore_game_state(game)
-        prev_player = game.current_player
-        game.act(action)
+        self.restore_game_state()
+        prev_player = self.game.current_player
+        self.game.act(action)
         new_node: MctsTree = MctsTree(
-            game.possible_actions(), game, prev_player)
+            self.game.possible_actions(), self.game, prev_player)
         self.children[action] = new_node
         return new_node
 
-    def simulate(self, game) -> int:
-        self.restore_game_state(game)
+    def simulate(self) -> int:
+        self.restore_game_state()
         score = self._terminating
         while not score:
-            score = game.act_random()
+            score = self.game.act_random()
         return score
 
-    def restore_game_state(self, game):
-        game.set_state(self._state, self._terminating,
-                       self.current_player)
+    def restore_game_state(self):
+        self.game.set_state(self._state, self._terminating,
+                            self.current_player)
 
     def __repr__(self):
         return str(self._state) + '%d/%d' % (self.wins, self.simulations)
 
 
 class Mcts:
-    def __init__(self, game: GAME, thread_count: int = 1) -> None:
-        self.games: List[GAME] = [game.copy() for _ in range(thread_count)]
-        self.thread_count = thread_count
+    def __init__(self, game: GAME) -> None:
+        self.game: GAME = game.copy()
         self.root: MctsTree = MctsTree(
-            game.possible_actions(), game)
+            game.possible_actions(), self.game)
         self._exploration_parameter: float = EXPLORATION_PARAMETER
-        self.thread_pool = ThreadPool(thread_count)
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
-        paths = []
-        explored_nodes = set()
-        targets_count = 0
-        current_node = self.root
-        while targets_count < self.thread_count and self.root not in explored_nodes:
-            while not current_node.is_leaf():
-                potential_leaf = current_node.choose_child_node(
-                    self._exploration_parameter, explored_nodes)
-                if potential_leaf is None:
-                    explored_nodes.add(current_node)
-                    path.pop()
-                    if path:
-                        current_node = path[-1]
-                        continue
-                    else:
-                        break
+        potential_leaf = self.root
+        while not potential_leaf.is_leaf():
+            potential_leaf = potential_leaf.choose_child_node(
+                self._exploration_parameter)
+            path.append(potential_leaf)
 
-                path.append(potential_leaf)
-                current_node = potential_leaf
+        return path, potential_leaf
 
-            if len(path) == 0:
-                break
-
-            explored_nodes.add(current_node)
-            targets = current_node.unvisited_children()
-            targets_count += targets if targets > 0 else 1
-            paths.append([node for node in path])
-            path.pop()
-            if path:
-                current_node = path[-1]
-
-        return paths
-
-    def backpropagation(self, paths: List[MctsTree], scores: int) -> None:
-        for path, score in zip(paths, scores):
-            for node in path:
-                if (node.prev_player == 0 and score == 1) or (node.prev_player == 1 and score == -1):
-                    node.wins += 1
-                node.simulations += 1
+    def backpropagation(self, path: List[MctsTree], score: int) -> None:
+        for node in path:
+            if (node.prev_player == 0 and score == 1) or (node.prev_player == 1 and score == -1):
+                node.wins += 1
+            node.simulations += 1
 
     def step(self) -> None:
-        paths = self.selection()
-        paths = self.expand(paths)
-        scores = self.simulate(paths)
-
-        self.backpropagation(paths, scores)
+        path, leaf = self.selection()
+        new_node = leaf.expand()
+        if new_node:  # if leaf is not terminating add expanded node to path
+            path.append(new_node)
+        else:
+            new_node = leaf  # run simulation on terminating node instead
+        score = new_node.simulate()
+        self.backpropagation(path, score)
 
     def run(self, steps: int) -> None:
         for _ in range(steps):
             self.step()
         # self.root.restore_game_state()
-
-    def expand(self, paths):
-        new_paths = []
-        current_path_it = 0
-        for _ in range(self.thread_count):
-            node = paths[current_path_it][-1]
-            while not node.is_leaf():
-                current_path_it += 1
-                if current_path_it >= len(paths):
-                    return new_paths
-                node = paths[current_path_it][-1]
-
-            new_node = node.expand(self.games[current_path_it])
-            new_path = [n for n in paths[current_path_it]]
-            if new_node:
-                new_path.append(new_node)
-            new_paths.append(new_path)
-
-        return new_paths
-
-    def _run_simulation(self, node, game):
-        return node.simulate(game)
-
-    def simulate(self, paths):
-        results = [self.thread_pool.apply_async(
-            self._run_simulation, (path[-1], game)) for (path, game) in zip(paths, self.games)]
-        return [r.get() for r in results]
 
     def predict(self):
         return max(self.root.children, key=lambda x: self.root.children[x].simulations)
@@ -176,7 +114,6 @@ class Mcts:
         if action in self.root.children:
             self.root = self.root.children[action]
         else:
-            game = self.games[0]
-            self.root.restore_game_state(game)
-            game.act(action)
-            self.root = MctsTree(game.possible_actions(), game)
+            self.root.restore_game_state()
+            self.game.act(action)
+            self.root = MctsTree(self.game.possible_actions(), self.game)
