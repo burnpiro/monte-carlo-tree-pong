@@ -23,7 +23,7 @@ game.reset()
 opponent = possible_opponents[int(selected_opponent)]
 opponent = opponent(game.action_space, player=2)
 
-tree = Mcts(game, thread_count=1)
+tree = Mcts(game)
 
 count = 0
 
