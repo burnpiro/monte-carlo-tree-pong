@@ -48,14 +48,14 @@ Your move: 1 2
 
 ## Pong game
 
-Start random game
+Start game
 ```bash
-python run_gym_random.py
+python pong_runner.py
 ```
 
-Start responsive game
+Setup a game (select opponent for MCTS):
 ```bash
-python run_gym_keyboard.py
+Select opponent for MCTS (1 - Random, 2 - Safe, 3 - Aggressive, 4 - Lazy): 2
 ```
 
 Read the instructions in the console.
