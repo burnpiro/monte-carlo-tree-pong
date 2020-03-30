@@ -54,11 +54,18 @@ class MctsTree:
         self.children[action] = new_node
         return new_node
 
-    def simulate(self) -> int:
+    def simulate(self, simulation_agent=None, max_simulation_steps=300) -> int:
         self.restore_game_state()
         score = self._terminating
-        while not score:
-            score = self.game.act_random()
+        step = 0
+        while not score and step < max_simulation_steps:
+            if simulation_agent:
+                action = simulation_agent.act(
+                    self.game._get_obs(), player=self.game.current_player)
+                score = self.game.act(action)
+            else:
+                score = self.game.act_random()
+            step += 1
         return score
 
     def restore_game_state(self):
@@ -70,11 +77,13 @@ class MctsTree:
 
 
 class Mcts:
-    def __init__(self, game: GAME) -> None:
+    def __init__(self, game: GAME, simulation_agent=None, max_simulation_steps=300) -> None:
         self.game: GAME = game.copy()
         self.root: MctsTree = MctsTree(
             game.possible_actions(), self.game)
         self._exploration_parameter: float = EXPLORATION_PARAMETER
+        self.simulation_agent = simulation_agent
+        self.max_simulation_steps = max_simulation_steps
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
@@ -99,7 +108,10 @@ class Mcts:
             path.append(new_node)
         else:
             new_node = leaf  # run simulation on terminating node instead
-        score = new_node.simulate()
+        score = new_node.simulate(
+            simulation_agent=self.simulation_agent,
+            max_simulation_steps=self.max_simulation_steps
+        )
         self.backpropagation(path, score)
 
     def run(self, steps: int) -> None:

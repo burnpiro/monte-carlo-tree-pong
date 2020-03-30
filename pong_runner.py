@@ -20,21 +20,17 @@ game = PongGame()
 game = PongMonitor(game, ".", force=True)
 game.reset()
 
-opponent = possible_opponents[int(selected_opponent)]
-opponent = opponent(game.action_space, player=2)
+opponent = possible_opponents[int(selected_opponent)]()
+mcts_agent = GreedyAgent()
 
-tree = Mcts(game)
+tree = Mcts(game, simulation_agent=mcts_agent)
 
 count = 0
 
 while not game.done:
-    if game.done:
-        print("You won!")
-        exit()
-
     count = count + 1
     start = time()
-    tree.run(60)
+    tree.run(10)
     stop = time()
     ob = game._get_obs()
     # if ob is not None:
@@ -43,9 +39,9 @@ while not game.done:
     #     for i, val in enumerate(ob):
     #         print(val, end=" ")
     #     print("")
-    print("total time: {}", stop - start)
+    print("total time: ", stop - start)
     action1 = tree.predict()
-    action2 = opponent.act(ob, 0, 0)
+    action2 = opponent.act(ob, player=1)
 
     game.act(action1)
     tree.move_root(action1)
@@ -53,7 +49,3 @@ while not game.done:
     tree.move_root(action2)
 
     game.render()
-
-    print("Enemy move: "+str(action1))
-
-print("You lost!")
