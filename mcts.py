@@ -2,12 +2,14 @@ from __future__ import annotations
 from typing import Union, Tuple, List
 import math
 import random
+import numpy as np
 from typing import List, Set, Dict, Tuple
 from nim.nim import Nim, ACTION as NIM_ACTION
 from pong.pong_game import PongGame, ACTION as PONG_ACTION
 from pong.monitor import PongMonitor
 
 EXPLORATION_PARAMETER = 1.41
+UNDETERMINISTIC_NODE_PROBABILITY = 0.0
 
 AVAILABLE_ACTION = Union[NIM_ACTION, PONG_ACTION]
 GAME = Union[Nim, PongGame, PongMonitor]
@@ -25,6 +27,8 @@ class MctsTree:
         self.current_player = game.current_player
         self.prev_player = prev_player
         self.game = game
+        self._is_undeterministic = np.random.choice([0, 1], 1, p=[(1 - UNDETERMINISTIC_NODE_PROBABILITY),
+                                                                  UNDETERMINISTIC_NODE_PROBABILITY])[0] == 1
 
     def is_leaf(self) -> bool:
         return self._terminating or bool(self.possible_actions - self.children.keys())
@@ -58,6 +62,9 @@ class MctsTree:
         self.restore_game_state()
         score = self._terminating
         step = 0
+        if self._is_undeterministic and not self._is_leaf:
+            return 0
+
         while not score and step < max_simulation_steps:
             if simulation_agent:
                 action = simulation_agent.act(
