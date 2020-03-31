@@ -50,7 +50,7 @@ class MctsTree:
         prev_player = self.game.current_player
         self.game.act(action)
         new_node: MctsTree = MctsTree(
-            self.game.possible_actions(), self.game, prev_player)
+            self.game.possible_actions(self.prev_player), self.game, prev_player)
         self.children[action] = new_node
         return new_node
 
@@ -101,7 +101,7 @@ class Mcts:
                 node.wins += 1
             node.simulations += 1
 
-    def step(self) -> None:
+    def step(self) -> int:
         path, leaf = self.selection()
         new_node = leaf.expand()
         if new_node:  # if leaf is not terminating add expanded node to path
@@ -113,10 +113,16 @@ class Mcts:
             max_simulation_steps=self.max_simulation_steps
         )
         self.backpropagation(path, score)
+        return len(path)
 
-    def run(self, steps: int) -> None:
+    def run(self, steps: int, verbose: bool = False) -> None:
+        max_length = 0
         for _ in range(steps):
-            self.step()
+            current_state = self.step()
+            max_length = current_state if current_state > max_length else max_length
+
+        if verbose:
+            print(max_length)
         # self.root.restore_game_state()
 
     def predict(self):

@@ -20,7 +20,7 @@ class PongGame(AtariEnv):
         super().__init__(frameskip=1)
         # self.ale.setInt('frame_skip', 2)
         # self.ale.setFloat('repeat_action_probability', 0.5)
-        self.seed()
+        # self.seed()
         self._game_id = next(self._game_count)
         self._seconf_player_class: POSSIBLE_PLAYERS = second_player
         self._is_multiplayer = second_player is not None
