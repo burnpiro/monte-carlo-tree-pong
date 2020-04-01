@@ -67,7 +67,7 @@ class PongGame(AtariEnv):
             self.current_player = 0
             return 0
 
-    def act_random(self) -> bool:
+    def act_random(self) -> int:
         return self.act(random.choice(self.possible_actions(player=self.current_player)))
 
     def reset(self):
@@ -94,3 +94,7 @@ class PongGame(AtariEnv):
         self.current_player = current_player
         self.restore_full_state(state[0])
         self.player_1_action = state[1]
+
+    def get_winner(self) -> int:
+        ob = self._get_obs()
+        return 0 if ob[P_RIGHT_SCORE] > 0 else 1

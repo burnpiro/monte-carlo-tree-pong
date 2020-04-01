@@ -13,9 +13,9 @@ tree.run(1)
 
 while not game.done:
     print(game.piles)
-    tree.run(1200)
     # move = input("Your move (`pile` `objects`): ").split()
     # action = tuple(int(x) for x in move)
+    tree.run(1200)
     action = tree.predict()
     print('CPU 0 move: %s' % str(action))
     game.act(action)

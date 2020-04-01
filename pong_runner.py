@@ -31,7 +31,7 @@ count = 0
 while not game.done:
     count = count + 1
     start = time()
-    tree.run(60, verbose=True)
+    tree.run(30, verbose=True)
     stop = time()
     ob = game._get_obs()
     # if ob is not None:

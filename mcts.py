@@ -6,6 +6,7 @@ from typing import List, Set, Dict, Tuple
 from nim.nim import Nim, ACTION as NIM_ACTION
 from pong.pong_game import PongGame, ACTION as PONG_ACTION
 from pong.monitor import PongMonitor
+from pd_logger import PDLogger
 
 EXPLORATION_PARAMETER = 1.41
 
@@ -50,7 +51,7 @@ class MctsTree:
         prev_player = self.game.current_player
         self.game.act(action)
         new_node: MctsTree = MctsTree(
-            self.game.possible_actions(self.prev_player), self.game, prev_player)
+            self.game.possible_actions(), self.game, prev_player)
         self.children[action] = new_node
         return new_node
 
@@ -77,13 +78,14 @@ class MctsTree:
 
 
 class Mcts:
-    def __init__(self, game: GAME, simulation_agent=None, max_simulation_steps=300) -> None:
+    def __init__(self, game: GAME, simulation_agent=None, max_simulation_steps=300, logger: PDLogger=None) -> None:
         self.game: GAME = game.copy()
         self.root: MctsTree = MctsTree(
             game.possible_actions(), self.game)
         self._exploration_parameter: float = EXPLORATION_PARAMETER
         self.simulation_agent = simulation_agent
         self.max_simulation_steps = max_simulation_steps
+        self.logger = logger
 
     def selection(self) -> Tuple[List[MctsTree], MctsTree]:
         path = [self.root]
@@ -120,9 +122,14 @@ class Mcts:
         for _ in range(steps):
             current_state = self.step()
             max_length = current_state if current_state > max_length else max_length
+            if self.logger is not None:
+                self.logger.log_path_length(current_state)
 
         if verbose:
             print(max_length)
+
+        if self.logger is not None:
+            self.logger.inc_run()
         # self.root.restore_game_state()
 
     def predict(self):
