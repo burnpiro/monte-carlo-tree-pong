@@ -130,3 +130,5 @@ dmypy.json
 /.idea/
 /images/
 /images_old/
+/logs/
+/logs-2/

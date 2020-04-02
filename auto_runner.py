@@ -26,33 +26,41 @@ print("Welcome in Pong")
 
 playouts = []
 
-for method in ['greedy', 'random']:
-    for agent in [2, 3]:
-        for run in range(5, 80, 5):
-            playouts.append({
-                'runs': run,
-                'agent': agent,
-                'method': method
-            })
+for method in ['greedy']:
+    for agent in [3]:
+        for run in [5, 35, 60]:
+            for i in range(0, 15):
+                playouts.append({
+                    'runs': run,
+                    'agent': agent,
+                    'method': method,
+                    'skip_actions': False,
+                    'exploration_parameter': 1.41
+                })
 
 for playout in playouts:
-    print('Playing pong with {} runs, using {} method, against {} opponent'.format(playout['runs'], playout['method'], opponent_names[
-        playout['agent']]))
+    print('Playing pong with {} runs, using {} method, against {} opponent'.format(playout['runs'], playout['method'],
+                                                                                   opponent_names[
+                                                                                       playout['agent']]))
     game = PongGame()
-    # game = PongMonitor(game, ".", force=True)
+    filename = './logss/' + playout['method'] + '-no-skip-1.41/pong-' + playout['method'] + '-' + str(
+        playout['runs']) + '-against-' + opponent_names[
+                   playout['agent']] + '_' + datetime.now().strftime("%Y%m%d-%H%M%S")
+    game = PongMonitor(game, filename, force=False)
     game.reset()
 
-    pong_logger = PDLogger('./logs-2/pong-' + playout['method'] + '-' + str(playout['runs']) + '-against-' + opponent_names[
-        playout['agent']] + '_' + datetime.now().strftime("%Y%m%d-%H%M%S"))
+    pong_logger = PDLogger(filename)
     opponent = possible_opponents[agent]()
     mcts_agent = GreedyAgent()
 
     tree = None
     if playout['method'] == 'greedy':
-        tree = Mcts(game, simulation_agent=mcts_agent, logger=pong_logger)
+        tree = Mcts(game, simulation_agent=mcts_agent, logger=pong_logger, skip_actions=playout['skip_actions'],
+                    exploration_parameter=playout['exploration_parameter'])
 
     if playout['method'] == 'random':
-        tree = Mcts(game, logger=pong_logger)
+        tree = Mcts(game, logger=pong_logger, skip_actions=playout['skip_actions'],
+                    exploration_parameter=playout['exploration_parameter'])
 
     count = 0
 
@@ -68,7 +76,7 @@ for playout in playouts:
         #     for i, val in enumerate(ob):
         #         print(val, end=" ")
         #     print("")
-        print("total time: ", stop - start)
+        # print("total time: ", stop - start)
         action1 = tree.predict()
         action2 = opponent.act(ob, player=1)
 

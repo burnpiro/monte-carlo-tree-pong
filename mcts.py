@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union, Tuple, List
 import math
+from time import sleep, time
 import random
 from typing import List, Set, Dict, Tuple
 from nim.nim import Nim, ACTION as NIM_ACTION
@@ -15,7 +16,8 @@ GAME = Union[Nim, PongGame, PongMonitor]
 
 
 class MctsTree:
-    def __init__(self, possible_actions: List[AVAILABLE_ACTION], game: GAME, prev_player: int = None) -> None:
+    def __init__(self, possible_actions: List[AVAILABLE_ACTION], game: GAME, prev_player: int = None,
+                 skip_actions=False) -> None:
         self.children = {}
         self.possible_actions: Set[AVAILABLE_ACTION] = set(possible_actions)
         self._is_leaf: bool = True
@@ -26,6 +28,7 @@ class MctsTree:
         self.current_player = game.current_player
         self.prev_player = prev_player
         self.game = game
+        self.skip_actions = skip_actions
 
     def is_leaf(self) -> bool:
         return self._terminating or bool(self.possible_actions - self.children.keys())
@@ -51,7 +54,8 @@ class MctsTree:
         prev_player = self.game.current_player
         self.game.act(action)
         new_node: MctsTree = MctsTree(
-            self.game.possible_actions(), self.game, prev_player)
+            self.game.possible_actions(self.prev_player if self.skip_actions else None), self.game, prev_player,
+            skip_actions=self.skip_actions)
         self.children[action] = new_node
         return new_node
 
@@ -69,6 +73,21 @@ class MctsTree:
             step += 1
         return score
 
+    def get_path_info(self):
+        if not bool(self.children):
+            return [1]
+
+        paths = []
+        values = []
+        for child in self.children.values():
+            paths.append(child.get_path_info())
+
+        for path_value in paths:
+            for value in path_value:
+                values.append(value + 1)
+
+        return values
+
     def restore_game_state(self):
         self.game.set_state(self._state, self._terminating,
                             self.current_player)
@@ -78,12 +97,14 @@ class MctsTree:
 
 
 class Mcts:
-    def __init__(self, game: GAME, simulation_agent=None, max_simulation_steps=300, logger: PDLogger=None) -> None:
+    def __init__(self, game: GAME, simulation_agent=None, max_simulation_steps=300, logger: PDLogger = None,
+                 skip_actions=False, exploration_parameter=EXPLORATION_PARAMETER) -> None:
         self.game: GAME = game.copy()
         self.root: MctsTree = MctsTree(
-            game.possible_actions(), self.game)
-        self._exploration_parameter: float = EXPLORATION_PARAMETER
+            game.possible_actions(), self.game, skip_actions=skip_actions)
+        self._exploration_parameter: float = exploration_parameter
         self.simulation_agent = simulation_agent
+        self.skip_actions = skip_actions
         self.max_simulation_steps = max_simulation_steps
         self.logger = logger
 
@@ -117,18 +138,24 @@ class Mcts:
         self.backpropagation(path, score)
         return len(path)
 
+    def _get_paths_info(self) -> List[int]:
+        all_paths = self.root.get_path_info()
+        return all_paths
+
     def run(self, steps: int, verbose: bool = False) -> None:
-        max_length = 0
+        # max_length = 0
+        start = time()
         for _ in range(steps):
             current_state = self.step()
-            max_length = current_state if current_state > max_length else max_length
-            if self.logger is not None:
-                self.logger.log_path_length(current_state)
+            # max_length = current_state if current_state > max_length else max_length
+        stop = time()
 
-        if verbose:
-            print(max_length)
+        # if verbose:
+        #     print(max_length)
 
         if self.logger is not None:
+            paths = self._get_paths_info()
+            self.logger.log_paths(paths, stop-start)
             self.logger.inc_run()
         # self.root.restore_game_state()
 
@@ -141,4 +168,4 @@ class Mcts:
         else:
             self.root.restore_game_state()
             self.game.act(action)
-            self.root = MctsTree(self.game.possible_actions(), self.game)
+            self.root = MctsTree(self.game.possible_actions(), self.game, skip_actions=self.skip_actions)
