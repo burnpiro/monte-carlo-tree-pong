@@ -24,13 +24,14 @@ opponent = possible_opponents[int(selected_opponent)]()
 mcts_agent = GreedyAgent()
 
 tree = Mcts(game, simulation_agent=mcts_agent)
+# tree = Mcts(game)
 
 count = 0
 
 while not game.done:
     count = count + 1
     start = time()
-    tree.run(10)
+    tree.run(30, verbose=True)
     stop = time()
     ob = game._get_obs()
     # if ob is not None:

@@ -23,7 +23,7 @@ class Nim:
             self.piles[random.randint(0, piles - 1)] += 1
 
     # Generate list of actions base on piles size and number
-    def possible_actions(self) -> List[ACTION]:
+    def possible_actions(self, player=None) -> List[ACTION]:
         return reduce(lambda acc, list_of_actions: acc + list_of_actions,
                       [[(pile_idx, j) for j in range(1, pile + 1)] for pile_idx, pile in enumerate(self.piles)])
 
